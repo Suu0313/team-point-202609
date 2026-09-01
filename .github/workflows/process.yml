@@ -47,6 +47,10 @@ jobs:
         if: steps.find-file.outputs.file != ''
         run: node parse_local.js "${{ steps.find-file.outputs.file }}"
 
+      - name: Generate timeseries
+        if: steps.find-file.outputs.file != ''
+        run: node generate_timeseries.js
+
       - name: Commit generated files
         if: steps.find-file.outputs.file != ''
         run: |
@@ -62,13 +66,13 @@ jobs:
             git push
           fi
 
-      - name: Generate timeseries
-        if: steps.find-file.outputs.file != ''
-        run: node generate_timeseries.js
+      # - name: Generate timeseries
+      #   if: steps.find-file.outputs.file != ''
+      #   run: node generate_timeseries.js
 
-      - name: Upload team_points.html to Gist
-        if: steps.find-file.outputs.file != ''
-        env:
-          GH_TOKEN: ${{ secrets.GIST_TOKEN }}
-        run: |
-          gh gist edit "${{ secrets.GIST_ID }}" team_points.html
+      # - name: Upload team_points.html to Gist
+      #   if: steps.find-file.outputs.file != ''
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GIST_TOKEN }}
+      #   run: |
+      #     gh gist edit "${{ secrets.GIST_ID }}" team_points.html

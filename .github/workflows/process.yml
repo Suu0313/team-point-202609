@@ -65,3 +65,10 @@ jobs:
       - name: Generate timeseries
         if: steps.find-file.outputs.file != ''
         run: node generate_timeseries.js
+
+      - name: Upload team_points.html to Gist
+        if: steps.find-file.outputs.file != ''
+        env:
+          GH_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          gh gist edit "${{ secrets.GIST_ID }}" team_points.html

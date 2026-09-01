@@ -1,0 +1,67 @@
+name: Process team point
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Find matching file
+        id: find-file
+        shell: bash
+        run: |
+          FILE=$(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" \
+            | grep -E 'team_point_.*\.html$' \
+            | head -n 1 || true)
+
+          if [ -n "$FILE" ]; then
+            echo "Found: $FILE"
+            echo "file=$FILE" >> "$GITHUB_OUTPUT"
+          else
+            echo "No matching file found."
+          fi
+
+      - name: Install dependencies
+        if: steps.find-file.outputs.file != ''
+        run: npm ci
+
+      - name: Parse team point
+        if: steps.find-file.outputs.file != ''
+        run: node parse_local.js "${{ steps.find-file.outputs.file }}"
+
+      - name: Commit generated files
+        if: steps.find-file.outputs.file != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Generate parsed data"
+            git push
+          fi
+
+      - name: Generate timeseries
+        if: steps.find-file.outputs.file != ''
+        run: node generate_timeseries.js

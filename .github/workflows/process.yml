@@ -45,7 +45,12 @@ jobs:
 
       - name: Parse team point
         if: steps.find-file.outputs.file != ''
-        run: node parse_local.js "${{ steps.find-file.outputs.file }}"
+        run: |
+          file="${{ steps.find-file.outputs.file }}"
+          date="${file#team_point_}"
+          date="${date%.html}"
+
+          node parse_local.js "$file" "team_ranking-${date}.json"
 
       - name: Generate timeseries
         if: steps.find-file.outputs.file != ''
